@@ -1,0 +1,62 @@
+* {
+  background-color: #101010;
+  color: #b0b0b0;
+  font-weight: bold;
+  font-size: 18px;
+  text-align: center;
+  align-items: center;
+}
+
+.address-input {
+  margin: 12px;
+  border-radius: 15px;
+  background-color: #2f2f2f;
+  height: 40px;
+  width: 70%;
+  border: 0px;
+}
+
+.balances-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.balance-panel {
+  margin: 9px;
+  width: 80%;
+  border-radius: 15px;
+  background-color: #2f2f2f;
+  padding: 5px;
+
+  display: flex;
+  justify-content: space-between;
+  align-self: center;
+}
+
+.balance-panel-token-field {
+  background-color: #2f2f2f;
+  font-size: 24px;
+  text-align: left;
+  width: 120px;
+}
+
+.labelled-quantity {
+  border-radius: 15px;
+  height: 75px;
+  width: 180px;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.labbeled-quantity-label-field {
+  margin-top: 9px;
+  margin-bottom: 10px;
+  width: 90%;
+  text-align: left;
+}
+
+.labbeled-quantity-value-field {
+  width: 90%;
+  text-align: right;
+}
