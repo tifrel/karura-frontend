@@ -1,8 +1,8 @@
 import { ApiPromise } from "@polkadot/api";
+import { LpSpec, toQuery, toString } from "./";
 
 export type BalanceDict = Record<string, bigint>;
 export type BalanceList = Array<{ token: string; balance: bigint }>;
-export type LpSpec = [string, string];
 
 interface GetTokenBalancesOptions {
   api: ApiPromise;
@@ -42,14 +42,13 @@ async function getLpShares(
 ): Promise<BalanceDict> {
   const shares: BalanceDict = {};
   await Promise.all(
-    lpSpecs.map(async ([tokenA, tokenB]) => {
+    lpSpecs.map(async (spec) => {
       const data = await api.query.tokens.accounts(address, {
-        dexShare: [{ token: tokenA }, { token: tokenB }],
+        dexShare: toQuery(spec),
       });
       const { free, frozen, reserved } =
         data.toJSON() as unknown as BalanceComponents;
-      shares[`lp://${tokenA}/${tokenB}`] =
-        BigInt(free) + BigInt(frozen) + BigInt(reserved);
+      shares[toString(spec)] = BigInt(free) + BigInt(frozen) + BigInt(reserved);
     })
   );
   return shares;
@@ -63,22 +62,3 @@ export async function getBalances(
   const lpShares = await getLpShares(addr, { lpSpecs, api });
   return { ...tokenBalances, ...lpShares };
 }
-
-// async function sqBalances(address: string): Promise<BalanceDict> {
-//   const query = `query {
-//     account(id: "${address}"){
-//       balances { nodes { tokenId total } }
-//     }
-//   }`;
-//   const res = await sq<{
-//     account: { balances: { nodes: Array<{ tokenId: string; total: string }> } };
-//   }>(query);
-//   console.log(res);
-
-//   const balances: BalanceDict = {};
-//   res.account.balances.nodes.forEach(({ tokenId, total }) => {
-//     balances[tokenId] = BigInt(total).valueOf();
-//   });
-
-//   return balances;
-// }

@@ -21,7 +21,8 @@ export async function initWsConnection(endpoint?: string): Promise<ApiPromise> {
 // -------------------------------- SubQuery -------------------------------- //
 const KARURA_SQ_ENDPOINT =
   "https://api.subquery.network/sq/AcalaNetwork/karura";
-// currently not used, as the SQ has problems
+
+// currently unused, as the SQ has problems
 export async function sq<T>(query: string, endpoint?: string): Promise<T> {
   endpoint = endpoint || KARURA_SQ_ENDPOINT;
 
@@ -48,12 +49,37 @@ export function isKaruraAddress(address: string): boolean {
 
 // precision will always be 3
 export function fmtBigint(x: bigint, sig?: number): string {
+  // if (x < BigInt(`5${"0".repeat(8)}`)) return "0.000";
   // default is pico-units (https://wiki.acala.network/karura/get-started/karura-assets)
   sig = sig || 12;
   const milliUnits = x / BigInt(10 ** (sig - 3));
   const milliString = `${milliUnits}`;
+  if (milliString.length < 4) {
+    return `0.${"0".repeat(3 - milliString.length)}${milliString}`;
+  }
   const significand = milliString.slice(0, -3);
   const mantissa = milliString.slice(-3);
-
   return `${significand}.${mantissa || 0}`;
+}
+
+export function initDict<T>(keys: Array<string>, init: T): Record<string, T> {
+  const r: Record<string, T> = {};
+  keys.forEach((k) => {
+    r[k] = init;
+  });
+  return r;
+}
+
+// ---------------------------- Liquidity pools ----------------------------- //
+export type LpSpec = [string, string];
+
+export function toString([tokenA, tokenB]: LpSpec): string {
+  return `lp://${tokenA}/${tokenB}`;
+}
+
+export function toQuery([tokenA, tokenB]: LpSpec): [
+  { token: string },
+  { token: string }
+] {
+  return [{ token: tokenA }, { token: tokenB }];
 }

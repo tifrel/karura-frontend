@@ -1,32 +1,30 @@
-import React from "react";
+import { ReactElement } from "react";
 import LabelledQuantity from "./LabelledQuantity";
 
 interface BalancePanelProps {
-  token: string;
+  asset: string;
   balance: bigint;
   price: bigint;
 }
 
-export default function BalancePanel(
-  props: BalancePanelProps
-): React.ReactElement {
+export default function BalancePanel(props: BalancePanelProps): ReactElement {
   const balanceField = (
     <LabelledQuantity label={`Balance`} value={props.balance} />
   );
 
-  // console.log(props);
-  const kusdBalance = (props.balance * props.price) / BigInt(1e12).valueOf();
-
-  const kusdBalanceField = (
-    <LabelledQuantity label={`Balance (kUSD)`} value={kusdBalance} />
+  const usdBalance = (props.balance * props.price) / BigInt(1e12).valueOf();
+  const usdBalanceField = (
+    <LabelledQuantity label={`Balance (USD)`} value={usdBalance} />
   );
+  console.log({ balance: props.balance, usdBalance });
 
   const priceField = <LabelledQuantity label="Price" value={props.price} />;
+
   return (
-    <div id={`balance-panel-${props.token}`} className="balance-panel">
-      <div className="balance-panel-token-field">{props.token}</div>
+    <div id={`balance-panel-${props.asset}`} className="balance-panel">
+      <div className="balance-panel-token-field">{props.asset}</div>
       {balanceField}
-      {kusdBalanceField}
+      {usdBalanceField}
       {priceField}
     </div>
   );

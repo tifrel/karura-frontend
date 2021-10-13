@@ -1,4 +1,4 @@
-import React from "react";
+import { ReactElement } from "react";
 import { fmtBigint } from "../utils";
 
 interface LabelledQuantityProps {
@@ -8,7 +8,7 @@ interface LabelledQuantityProps {
 
 export default function LabelledQuantity(
   props: LabelledQuantityProps
-): React.ReactElement {
+): ReactElement {
   return (
     <div className="labelled-quantity">
       <div className="labbeled-quantity-label-field">{props.label}</div>

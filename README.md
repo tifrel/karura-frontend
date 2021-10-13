@@ -1,3 +1,7 @@
+Long startup is to be expected, as it takes some time to initialize the
+WebSocket connection. WebSocket connection might fail, where the app will retry
+until it works.
+
 ## How to fetch data from Karura
 
 - [`acala.js`](https://github.com/AcalaNetwork/acala.js/wiki): Querying the

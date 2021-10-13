@@ -1,9 +1,10 @@
-import React from "react";
-import { PriceDict, getPrices } from "../utils/prices";
-import { BalanceDict, LpSpec, getBalances } from "../utils/balances";
+import { ReactElement, useState, useEffect } from "react";
 import AddressInput from "./AddressInput";
 import BalancePanel from "./BalancePanel";
-import { isKaruraAddress } from "../utils";
+
+import { getPrices } from "../utils/prices";
+import { getBalances } from "../utils/balances";
+import { isKaruraAddress, initDict, LpSpec, toString } from "../utils";
 import { ApiPromise } from "@polkadot/api";
 
 interface BalancesContainerProps {
@@ -12,84 +13,51 @@ interface BalancesContainerProps {
   lpSpecs: Array<LpSpec>;
 }
 
-interface BalancesContainerState {
-  tokens: Array<string>;
-  address?: string;
-  statusMessage?: string;
-  prices: PriceDict;
-  balances: BalanceDict;
-}
+export default function BalancesContainer(
+  props: BalancesContainerProps
+): ReactElement {
+  // state
+  const assets = [...props.tokens, ...props.lpSpecs.map(toString)];
+  const [_address, setAddress] = useState("");
+  const [status, setStatus] = useState("");
+  const [prices, setPrices] = useState(initDict(assets, BigInt(0)));
+  const [balances, setBalances] = useState(initDict(assets, BigInt(0)));
 
-export class BalancesContainer extends React.Component<
-  BalancesContainerProps,
-  BalancesContainerState
-> {
-  constructor(props: BalancesContainerProps) {
-    super(props);
+  // input handling
+  const handleAddressInput = async (addr: string) => {
+    setAddress(addr);
+    setStatus(isKaruraAddress(addr) ? "Fetching data..." : "Invalid address");
 
-    // init prices and balances
-    const prices: PriceDict = {};
-    const balances: BalanceDict = {};
-    const tokens = Object.keys(balances).sort();
-    tokens.forEach((token) => {
-      prices[token] = 0n;
-      balances[token] = 0n;
-    });
-    this.state = { prices, balances, tokens };
+    try {
+      setBalances(await getBalances(addr, props));
+      setStatus("");
+    } catch (e) {
+      setStatus(`Querying failed! (${(e as Error).toString()})`);
+    }
+  };
 
-    // initialize price updating logic
-    const fetchPrices = async () => {
-      const prices = await getPrices(tokens, this.props.api);
-      this.setState({ prices });
-
-      // update again in 5 seconds
-      setTimeout(fetchPrices, 5000);
+  // price polling
+  useEffect(() => {
+    const intervalHandle = setInterval(async () => {
+      setPrices(await getPrices(props));
+    }, 5000);
+    return () => {
+      clearTimeout(intervalHandle);
     };
-    setTimeout(fetchPrices, 50);
-  }
+  });
 
-  getPrice(token: string): bigint {
-    return this.state.prices[token] || 0n;
-  }
-  // omRCxDttLgqMeTADypXT5PDss23ucFPUWDy8rTvd9up6jen
-  // p7nKeJt1wXXE8UCSgKKvsHn5ysZNx9vKXkbzSxjSg2oT4hX
-
-  render() {
-    const handleAddressInput = async (address: string) => {
-      this.setState({
-        address,
-        statusMessage: isKaruraAddress(address)
-          ? "Fetching data..."
-          : "Your address is invalid",
-      });
-
-      try {
-        // fetch the data
-        const balances = await getBalances(address, this.props);
-        console.log(balances);
-        const tokens = Object.keys(balances).sort();
-        // update state
-        this.setState({ balances, tokens, statusMessage: undefined });
-      } catch (e) {
-        const statusMessage = `Querying failed! (${(e as Error).toString()})`;
-        this.setState({ statusMessage });
-      }
-    };
-
-    // TODO: styling of status-message div
-    return (
-      <div className="balances-container">
-        <AddressInput handler={handleAddressInput} />
-        <div>{this.state.statusMessage}</div>
-        {this.state.tokens.map((token) => (
-          <BalancePanel
-            key={`balance-panel-${token}`}
-            token={token}
-            balance={this.state.balances[token]}
-            price={this.getPrice(token)}
-          />
-        ))}
-      </div>
-    );
-  }
+  return (
+    <div className="balances-container">
+      <AddressInput handler={handleAddressInput} />
+      <div>{status}</div>
+      {assets.map((asset) => (
+        <BalancePanel
+          key={`balance-panel-${asset}`}
+          asset={asset}
+          balance={balances[asset]}
+          price={prices[asset]}
+        />
+      ))}
+    </div>
+  );
 }
